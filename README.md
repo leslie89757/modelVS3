@@ -4,6 +4,7 @@
 <img width="1912" height="1254" alt="截屏2025-08-11 13 48 33" src="https://github.com/user-attachments/assets/67051d73-d57d-4ff5-9962-fad2648f8c34" />
 <img width="1937" height="1257" alt="截屏2025-08-11 13 48 51" src="https://github.com/user-attachments/assets/b0d4dd9c-3303-4a18-9f8e-9817321caa12" />
 <img width="1913" height="1262" alt="截屏2025-08-11 13 49 50" src="https://github.com/user-attachments/assets/80ecb3ad-5e4b-430d-99c8-5dc76b3aee31" />
+<img width="1932" height="1144" alt="截屏2025-08-11 13 50 25" src="https://github.com/user-attachments/assets/a8fef38e-77e6-40c1-8409-5682dc318ebb" />
 
 > 现代化的多模型 Agent 平台，支持 OpenAI、Anthropic、Google Gemini 等 LLM
 
