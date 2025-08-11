@@ -487,9 +487,8 @@ modelVS3/
 
 ## 💬 支持
 
-- 📧 邮箱: support@modelvs3.com
-- 💬 QQ群: 123456789
-- 📖 文档: https://docs.modelvs3.com
+- 📧 邮箱: leslie89757@126.com
+- 💬 微信: leslie89757
 
 ---
 
