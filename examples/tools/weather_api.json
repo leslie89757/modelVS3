@@ -1,0 +1,47 @@
+{
+  "name": "weather_api",
+  "description": "获取指定城市的天气信息",
+  "type": "function",
+  "function": {
+    "name": "get_weather",
+    "description": "根据城市名称获取当前天气状况",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "城市名称，例如：北京、上海、深圳"
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["celsius", "fahrenheit"],
+          "description": "温度单位",
+          "default": "celsius"
+        }
+      },
+      "required": ["city"]
+    }
+  },
+  "endpoint": "https://api.weather.com/v1/current",
+  "method": "GET",
+  "headers": {
+    "Authorization": "Bearer ${WEATHER_API_KEY}",
+    "Content-Type": "application/json"
+  },
+  "response_format": {
+    "temperature": "number",
+    "humidity": "number",
+    "condition": "string",
+    "wind_speed": "number"
+  },
+  "enabled": true,
+  "category": "external_api",
+  "rate_limit": {
+    "requests_per_minute": 60,
+    "requests_per_hour": 1000
+  },
+  "error_handling": {
+    "retry_attempts": 3,
+    "timeout_seconds": 10
+  }
+} 

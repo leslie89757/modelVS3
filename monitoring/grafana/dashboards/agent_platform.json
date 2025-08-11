@@ -1,0 +1,152 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "ModelVS3 Agent Platform",
+    "tags": ["modelvs3", "agent", "platform"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "HTTP 请求总数",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "legendFormat": "QPS"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "red", "value": 80}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Agent 执行次数",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(agent_runs_total)",
+            "legendFormat": "总执行数"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1000},
+                {"color": "red", "value": 5000}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "HTTP 请求延迟",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "yAxes": [
+          {
+            "label": "seconds",
+            "show": true
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Token 使用统计",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(token_usage_total{type=\"input\"}[5m]))",
+            "legendFormat": "Input Tokens/sec"
+          },
+          {
+            "expr": "sum(rate(token_usage_total{type=\"output\"}[5m]))",
+            "legendFormat": "Output Tokens/sec"
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "yAxes": [
+          {
+            "label": "tokens/sec",
+            "show": true
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 5,
+        "title": "错误率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+            "legendFormat": "5xx Error Rate %"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"4..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+            "legendFormat": "4xx Error Rate %"
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "yAxes": [
+          {
+            "label": "percentage",
+            "show": true,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "refresh": "5s",
+    "schemaVersion": 16,
+    "version": 0
+  }
+} 

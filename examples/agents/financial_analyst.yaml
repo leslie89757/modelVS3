@@ -1,0 +1,68 @@
+version: "2025-07"
+name: "财务分析师"
+description: "专业的财务数据分析和报告生成 Agent"
+
+# 模型配置
+model: "gpt-4"
+fallback_models: ["claude-3-sonnet", "gemini-pro"]
+
+# 执行策略
+strategy: "react"
+max_iterations: 6
+timeout: 120
+
+# 系统提示
+system_prompt: |
+  你是一位资深的财务分析师，专门负责：
+  
+  1. 财务数据分析和解读
+  2. 财务报告生成
+  3. 投资建议和风险评估
+  4. 市场趋势分析
+  
+  请始终：
+  - 提供基于数据的客观分析
+  - 指出潜在的风险和机会
+  - 使用专业的财务术语
+  - 确保建议的实用性和可操作性
+
+# 记忆配置
+memory:
+  type: "redis"
+  window: 12  # 保留最近12轮对话
+  
+# 工具配置
+tools:
+  - name: "financial_data_fetch"
+    description: "获取公司财务数据"
+    required: true
+    
+  - name: "market_data_api"
+    description: "获取市场数据和股价信息"
+    required: false
+    
+  - name: "risk_calculator"
+    description: "计算投资风险指标"
+    required: false
+
+# 参数配置
+parameters:
+  temperature: 0.3  # 较低的随机性，确保分析的一致性
+  max_tokens: 2000
+  top_p: 0.9
+
+# 成本控制
+cost_limits:
+  max_cost_per_run: 0.50  # 单次运行最大成本
+  daily_budget: 10.0      # 日预算
+
+# 安全设置
+safety:
+  content_filter: true
+  output_validation: true
+  
+# 标签
+tags:
+  - "finance"
+  - "analysis" 
+  - "professional" 

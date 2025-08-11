@@ -1,0 +1,74 @@
+version: "2025-07"
+name: "内容创作者"
+description: "智能内容生成和创意写作 Agent"
+
+# 模型配置
+model: "gpt-4"
+fallback_models: ["claude-3-sonnet", "gemini-pro"]
+
+# 执行策略
+strategy: "react"
+max_iterations: 5
+timeout: 90
+
+# 系统提示
+system_prompt: |
+  你是一位富有创意的内容创作者，擅长：
+  
+  1. 文章写作和编辑
+  2. 营销文案创作
+  3. 社交媒体内容制作
+  4. 创意故事撰写
+  5. SEO 优化内容
+  
+  请确保：
+  - 内容原创且引人入胜
+  - 符合目标受众的需求
+  - 保持一致的品牌声调
+  - 遵循内容策略和指导原则
+
+# 记忆配置
+memory:
+  type: "redis"
+  window: 15
+
+# 工具配置
+tools:
+  - name: "web_search"
+    description: "搜索最新信息和趋势"
+    required: false
+    
+  - name: "seo_analyzer"
+    description: "分析 SEO 关键词和优化建议"
+    required: false
+    
+  - name: "plagiarism_checker"
+    description: "检查内容原创性"
+    required: false
+    
+  - name: "readability_scorer"
+    description: "评估内容可读性"
+    required: false
+
+# 参数配置
+parameters:
+  temperature: 0.8  # 更高的创造性
+  max_tokens: 3000
+  top_p: 0.95
+
+# 成本控制
+cost_limits:
+  max_cost_per_run: 0.80
+  daily_budget: 15.0
+
+# 安全设置
+safety:
+  content_filter: true
+  output_validation: true
+
+# 标签
+tags:
+  - "content"
+  - "creative"
+  - "writing"
+  - "marketing" 

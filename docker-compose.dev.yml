@@ -1,0 +1,126 @@
+version: '3.8'
+
+# 开发环境项目名称
+name: modelvs3-dev
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: modelvs3_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"  # 开发环境使用5433端口
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - modelvs3-dev-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"  # 开发环境使用6380端口
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - modelvs3-dev-network
+
+  # 后端 API 服务
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/modelvs3_dev
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=true
+      - ENVIRONMENT=development
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - JWT_SECRET_KEY=dev-jwt-secret-key
+      - CORS_ORIGINS=http://localhost:3004,http://127.0.0.1:3004
+    ports:
+      - "8001:8000"  # 开发环境使用8001端口
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./qimenEngine:/app/qimenEngine
+    restart: unless-stopped
+    networks:
+      - modelvs3-dev-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8001
+    ports:
+      - "3004:3000"  # 开发环境使用3004端口
+    environment:
+      - VITE_API_URL=http://localhost:8001
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - modelvs3-dev-network
+
+  # Prometheus 监控
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "8091:9090"  # 开发环境使用8091端口
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_dev_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - modelvs3-dev-network
+
+  # Grafana 仪表盘
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3002:3000"  # 开发环境使用3002端口
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=dev-admin
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - modelvs3-dev-network
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+  prometheus_dev_data:
+  grafana_dev_data:
+
+networks:
+  modelvs3-dev-network:
+    driver: bridge 

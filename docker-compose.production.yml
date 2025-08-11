@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: modelvs3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "127.0.0.1:5432:5432"  # 只允许本地访问
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - modelvs3-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"  # 只允许本地访问
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - modelvs3-network
+
+  # 后端 API 服务
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/modelvs3
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=false
+      - ENVIRONMENT=production
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3003}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PUBLIC_HOST=${PUBLIC_HOST:-36.153.25.22}
+      - PRODUCTION_PORT=${PRODUCTION_PORT:-3003}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./qimenEngine:/app/qimenEngine
+      # SSL证书挂载（如果需要）
+      # - ./certs:/app/certs:ro
+    restart: unless-stopped
+    networks:
+      - modelvs3-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "3003:3000"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - modelvs3-network
+
+  # Prometheus 监控（可选，生产环境可能不需要对外暴露）
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "127.0.0.1:8090:9090"  # 只允许本地访问
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=30d'  # 数据保留30天
+    restart: unless-stopped
+    networks:
+      - modelvs3-network
+
+  # Grafana 仪表盘（可选）
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "127.0.0.1:3001:3000"  # 只允许本地访问
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - modelvs3-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  modelvs3-network:
+    driver: bridge 
